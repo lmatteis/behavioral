@@ -44,15 +44,21 @@ BProgram.prototype.event = function(e) {
     this.run(); // Initiate super-step
 };
 
-BProgram.prototype.run = function() {
+BProgram.prototype.run = async function() {
     if (this.running.isEmpty()) {
         return; // TODO: Test end-case of empty current list
     }
     while (this.running.notEmpty()) {
-        var bid = this.running.shift();
+        var bid = this.running[0];
         var bt = bid.bthread;
         try {
             var newbid = bt.next(this.lastEvent).value; // Run an iteration of the generator
+            if (Promise.resolve(newbid) == newbid) {
+              const ret = await newbid // think of it as a promise
+              this.lastEvent = ret // so we access the data: var foo = yield promise()
+              return this.run()
+            }
+            this.running.shift()
             newbid.bthread = bt; // Bind the bthread to the bid for running later
             newbid.priority = bid.priority; // Keep copying the prio
             newbid.name = bid.name; // Keep copying the name
