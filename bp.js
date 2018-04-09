@@ -35,7 +35,7 @@ BProgram.prototype.addAll = function(bthreads, priorities) {
     }
 };
 
-BProgram.prototype.event = function(e) {
+BProgram.prototype.event = function(e, data) {
     var name = 'request ' + e;
     var bt = function* () {
         yield {request: [e], wait: [function(x) { return true; }]}
@@ -44,7 +44,7 @@ BProgram.prototype.event = function(e) {
     this.run(); // Initiate super-step
 };
 
-BProgram.prototype.run = async function() {
+BProgram.prototype.run = function() {
     if (this.running.isEmpty()) {
         return; // TODO: Test end-case of empty current list
     }
@@ -54,9 +54,19 @@ BProgram.prototype.run = async function() {
         try {
             var newbid = bt.next(this.lastEvent).value; // Run an iteration of the generator
             if (Promise.resolve(newbid) == newbid) {
-              const ret = await newbid // think of it as a promise
-              this.lastEvent = ret // so we access the data: var foo = yield promise()
-              return this.run()
+              // transform it to a { wait } event
+              let eventName = 'async_' + this.lastEvent
+              newbid.then(ret => {
+                this.event(eventName, ret)
+              })
+              newbid = {
+                wait: [eventName]
+              }
+              // this.run()
+              // return
+              // const ret = await newbid // think of it as a promise
+              // this.lastEvent = ret // so we access the data: var foo = yield promise()
+              // return
             }
             this.running.shift()
             newbid.bthread = bt; // Bind the bthread to the bid for running later

@@ -40,7 +40,8 @@ Fetch movies from API and store them in memory
 bp.addBThread(`
 Fetch movie details
 `, pr++, function* () {
-  yield { wait: ['MOVIE_CLICKED'] }
+  const movieId = yield { wait: ['MOVIE_CLICKED'] }
+  console.log('movieId', movieId)
   yield { request: ['FETCH_MOVIE_DETAILS'] }
   console.log('details')
   yield fetchMovieDetails(store.clickedMovieId)
