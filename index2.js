@@ -40,8 +40,7 @@ Fetch movies from API and store them in memory
 bp.addBThread(`
 Fetch movie details
 `, pr++, function* () {
-  const movieId = yield { wait: ['MOVIE_CLICKED'] }
-  console.log('movieId', movieId)
+  yield { wait: ['MOVIE_CLICKED'] }
   yield { request: ['FETCH_MOVIE_DETAILS'] }
   console.log('details')
   yield fetchMovieDetails(store.clickedMovieId)
@@ -58,16 +57,29 @@ Fetch movie reviews
   yield { request: ['FETCH_MOVIE_REVIEWS_SUCCESS'] }
 })
 
+// bp.addBThread(`
+// Run fetch movie details/reviews in parallel
+// `, pr++, function* () {
+//   yield { wait: ['FETCH_MOVIE_REVIEWS'], block: ['FETCH_MOVIE_DETAILS'] }
+//   // yield { wait: ['FETCH_MOVIE_DETAILS'], block: ['FETCH_MOVIE_REVIEWS'] }
+// })
+
 bp.addBThread(`
-Run fetch movie details/reviews in parallel
+Block fetch movie reviews
 `, pr++, function* () {
-  yield { wait: ['FETCH_MOVIE_REVIEWS'], block: ['FETCH_MOVIE_DETAILS'] }
+    yield { block: ['FETCH_MOVIE_REVIEWS'] }
+    console.log('after block')
   // yield { wait: ['FETCH_MOVIE_DETAILS'], block: ['FETCH_MOVIE_REVIEWS'] }
 })
 
 bp.addBThread('Log', pr++, function* () {
   while (true) {
-    yield { wait: event => console.log(event) }
+    yield {
+      wait: [event => {
+        console.log(event)
+        return true
+      }]
+    }
   }
 })
 
