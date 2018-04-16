@@ -17,6 +17,20 @@ function fetchComments(ms) {
   ], ms)
 }
 
+class Delay extends React.Component {
+  state = { loading: true }
+  componentDidMount() {
+    setTimeout(
+      () => this.setState({ loading: false })
+    , this.props.ms)
+  }
+  render() {
+    return this.state.loading
+      ? null
+      : this.props.children
+  }
+}
+
 const BProgram = require('./bp').default
 const bp = new BProgram()
 let pr = 1
@@ -36,7 +50,7 @@ function withBehavior(WrappedComponent, threads) {
         while (true) {
           yield {
             wait: [(event, payload) => {
-              // console.log('event', event, payload)
+              console.log('event', event, payload)
               if (event.startsWith('SET_STATE')) {
                 that.setState(payload)
               }
@@ -76,7 +90,13 @@ const BehavioralComments = withBehavior(Comments, [
     yield { request: ['FETCH_COMMENTS']}
     const comments = yield fetchComments(1000)
     yield { request: ['FETCH_COMMENTS_SUCCESS'], payload: { comments }}
+    yield { request: ['FETCH_ANOTHER_COMMENTS_SUCCESS'], payload: { comments }}
   },
+  // add after Delay was added
+  function* () {
+    yield { wait: ['FETCH_ANOTHER_COMMENTS_COUNT'], block: ['FETCH_ANOTHER_COMMENTS_SUCCESS']}
+
+  }
 ])
 
 function CommentsCount(props) {
@@ -88,17 +108,15 @@ const BehavioralCommentsCount = withBehavior(CommentsCount, [
     const comments = yield fetchComments(2000)
     yield { request: ['FETCH_COMMENTS_COUNT_SUCCESS']}
     yield { request: ['SET_STATE_COMMENTS_COUNT'], payload: { commentsCount: comments.length }}
-  }
-])
-
-const BlockCommentsCount = withBehavior(BehavioralCommentsCount, [
+  },
   //// STUFF AFTER THIS COULD BE ADDED BY OTHERS
   function* () {
     // block FETCH_COMMENTS_COUNT
     yield { block: ['FETCH_COMMENTS_COUNT']}
   },
   function* () {
-    const { comments } = yield { wait: ['FETCH_COMMENTS_SUCCESS']}
+    yield { request: ['FETCH_ANOTHER_COMMENTS_COUNT']}
+    const { comments } = yield { wait: ['FETCH_ANOTHER_COMMENTS_SUCCESS']}
     yield { request: ['SET_STATE_COMMENTS_COUNT'], payload: { commentsCount: comments.length }}
   }
 ])
@@ -116,7 +134,9 @@ class App extends Component {
         </p>
         <hr />
         <BehavioralComments />
-        <BlockCommentsCount />
+        <Delay ms={4000}>
+          <BehavioralCommentsCount />
+        </Delay>
       </div>
     );
   }
