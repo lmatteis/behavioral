@@ -88,15 +88,18 @@ const BehavioralCommentsCount = withBehavior(CommentsCount, [
     const comments = yield fetchComments(2000)
     yield { request: ['FETCH_COMMENTS_COUNT_SUCCESS']}
     yield { request: ['SET_STATE_COMMENTS_COUNT'], payload: { commentsCount: comments.length }}
-  },
+  }
+])
+
+const BlockCommentsCount = withBehavior(BehavioralCommentsCount, [
   //// STUFF AFTER THIS COULD BE ADDED BY OTHERS
   function* () {
     // block FETCH_COMMENTS_COUNT
     yield { block: ['FETCH_COMMENTS_COUNT']}
   },
   function* () {
-    const comments = yield { wait: ['FETCH_COMMENTS_SUCCESS']}
-    yield { request: ['SET_STATE_COMMENTS_COUNT'], payload: { commentsCount: 23}}
+    const { comments } = yield { wait: ['FETCH_COMMENTS_SUCCESS']}
+    yield { request: ['SET_STATE_COMMENTS_COUNT'], payload: { commentsCount: comments.length }}
   }
 ])
 
@@ -113,7 +116,7 @@ class App extends Component {
         </p>
         <hr />
         <BehavioralComments />
-        <BehavioralCommentsCount />
+        <BlockCommentsCount />
       </div>
     );
   }
