@@ -18,6 +18,7 @@ function BProgram() {
     this.running = [];
     this.pending = [];
     this.lastEvent = undefined;
+    this.lastPayload = undefined;
     this.disabled = []; // List of currently disabled elements
 }
 
@@ -38,7 +39,7 @@ BProgram.prototype.addAll = function(bthreads, priorities) {
 BProgram.prototype.event = function(e, data) {
     var name = 'request ' + e;
     var bt = function* () {
-        yield {request: [e], wait: [function(x) { return true; }]}
+        yield {request: [e], wait: [function(x) { return true; }], payload: data}
     };
     this.addBThread(name, 1, bt);
     this.run(); // Initiate super-step
@@ -52,10 +53,10 @@ BProgram.prototype.run = function() {
         var bid = this.running[0];
         var bt = bid.bthread;
         try {
-            var newbid = bt.next(this.lastEvent).value; // Run an iteration of the generator
+            var newbid = bt.next(this.lastPayload).value; // Run an iteration of the generator
             if (Promise.resolve(newbid) == newbid) {
               // transform it to a { wait } event
-              let eventName = 'async_' + this.lastEvent
+              let eventName = 'async_' + this.lastEvent + '_' + Math.random()
               newbid.then(ret => {
                 this.event(eventName, ret)
               })
@@ -91,7 +92,7 @@ BProgram.prototype.run = function() {
             for (var i=0; i<waitlist.length; i++) {
                 var waiting = waitlist[i];
                 if (waiting == this.lastEvent ||
-                    (typeof(waiting) == 'function' && waiting(this.lastEvent))
+                    (typeof(waiting) == 'function' && waiting(this.lastEvent, this.lastPayload))
                 ) {
                     cur = true;
                 }
@@ -120,7 +121,11 @@ BProgram.prototype.selectNextEvent = function() {
         if (bid.request) {
             for (j=0; j<bid.request.length; j++) {
                 var e = bid.request[j];
-                var c = {priority: bid.priority, event: e};
+                var c = {
+                  priority: bid.priority,
+                  event: e,
+                  payload: bid.payload,
+                };
                 candidates.push(c);
             }
         }
@@ -149,8 +154,10 @@ BProgram.prototype.selectNextEvent = function() {
     if (events.length > 0) {
         events.sort(compareBids);
         this.lastEvent = events[0].event;
+        this.lastPayload = events[0].payload
     } else {
         this.lastEvent = null;
+        this.lastPayload = null;
     }
 };
 
