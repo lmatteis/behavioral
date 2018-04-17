@@ -13,7 +13,13 @@ function asyncData(data, ms) {
 function fetchComments(ms) {
   return asyncData([
     { id: 1, comment: 'I love Behavioral Programming' },
-    { id: 2, comment: 'I think React works well with BP' }
+    { id: 2, comment: 'I think React works well with BP' },
+    { id: 3, comment: 'Bim bum' },
+    { id: 4, comment: 'Aphex twin' },
+    { id: 5, comment: 'The flashbulb' },
+    { id: 6, comment: 'Autechre' },
+    { id: 7, comment: 'Tame impala' },
+    { id: 8, comment: 'Proem' },
   ], ms)
 }
 
@@ -91,7 +97,13 @@ class Comments extends React.Component {
 const BehavioralComments = withBehavior([
   function* () {
     const { comments } = yield { wait: ['FETCH_COMMENTS_SUCCESS'] }
-    this.setState({ comments })
+    yield { request: ['UPDATE_COMMENTS'], payload: { comments } }
+  },
+  function* () {
+    while (true) {
+      const { comments } = yield { wait: ['UPDATE_COMMENTS'] }
+      this.setState({ comments })
+    }
   },
   function* () {
     yield { request: ['FETCH_COMMENTS']}
@@ -120,6 +132,7 @@ const BehavioralCommentsCount = withBehavior([
   },
 ])(CommentsCount)
 
+
 const BlockCommentsCount = withBehavior([
   //// STUFF AFTER THIS COULD BE ADDED BY OTHERS
   function* () {
@@ -133,6 +146,54 @@ const BlockCommentsCount = withBehavior([
   }
 ])(BehavioralCommentsCount)
 
+const LoadingComments = withBehavior([
+  function* () {
+    this.setState({ loading: true })
+    yield { wait: ['FETCH_COMMENTS_SUCCESS']}
+    this.setState({ loading: false })
+  }
+])(class extends React.Component {
+  render() {
+    return this.state.loading
+      ? 'Loading...'
+      : null
+  }
+})
+
+const CommentsPagination = withBehavior([
+  function* () {
+    const { comments } = yield { wait: ['FETCH_COMMENTS_SUCCESS']}
+    let pages = []
+    let count = 1
+    for (var i=0; i<(comments.length / this.props.perPage); i++) {
+      pages.push(count++)
+    }
+    this.setState({ pages })
+  },
+  function* () {
+    const { comments } = yield { wait: ['FETCH_COMMENTS_SUCCESS'] }
+    this.setState({ comments })
+    yield { request: ['UPDATE_COMMENTS'], payload: { comments: [...comments].splice(0, this.props.perPage)} }
+  },
+  function* () {
+    while (true) {
+      const currentPage = yield { wait: ['SET_CURRENT_PAGE'] }
+      yield { request: ['UPDATE_COMMENTS'], payload: { comments: [...this.state.comments].splice(currentPage - 1, this.props.perPage)}}
+      console.log([...this.state.comments].splice(currentPage - 1, this.props.perPage))
+    }
+  }
+])(class extends React.Component {
+  render() {
+    return this.state.pages
+      ? this.state.pages.map(page =>
+        <button key={page} onClick={() => {
+          bp.event('SET_CURRENT_PAGE', page)
+          this.setState({ currentPage: page })
+        }}>{page}</button>
+      )
+      : null
+  }
+})
 
 class App extends Component {
   render() {
@@ -146,13 +207,17 @@ class App extends Component {
           To get started, edit <code>src/App.js</code> and save to reload.
         </p>
         <hr />
+        <LoadingComments />
+
         <BehavioralComments />
-        <Delay ms={4000}>
-          <BlockCommentsCount />
-        </Delay>
+        <br />
+        <CommentsPagination perPage={2} />
       </div>
     );
   }
 }
+        // <Delay ms={4000}>
+        //   <BlockCommentsCount />
+        // </Delay>
 
 export default App;

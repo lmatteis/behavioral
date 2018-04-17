@@ -11,7 +11,7 @@ Array.prototype.notEmpty = function() {
 };
 
 function compareBids(a, b) {
-    return a.priority - b.priority;
+    return b.priority - a.priority;
 }
 
 function BProgram() {
