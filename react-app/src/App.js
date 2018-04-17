@@ -209,9 +209,9 @@ class App extends Component {
         <hr />
         <LoadingComments />
 
-        <BehavioralComments />
-        <br />
         <CommentsPagination perPage={2} />
+        <br />
+        <BehavioralComments />
       </div>
     );
   }
