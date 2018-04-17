@@ -195,6 +195,19 @@ const CommentsPagination = withBehavior([
   }
 })
 
+const BehavioralCommentsWithPagination = withBehavior([
+])(class extends React.Component {
+  render() {
+    return (
+      <React.Fragment>
+        <LoadingComments />
+        <CommentsPagination perPage={2} />
+        <BehavioralComments />
+      </React.Fragment>
+    )
+  }
+})
+
 class App extends Component {
   render() {
     return (
@@ -207,11 +220,7 @@ class App extends Component {
           To get started, edit <code>src/App.js</code> and save to reload.
         </p>
         <hr />
-        <LoadingComments />
-
-        <CommentsPagination perPage={2} />
-        <br />
-        <BehavioralComments />
+        <BehavioralCommentsWithPagination />
       </div>
     );
   }
