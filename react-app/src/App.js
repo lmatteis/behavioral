@@ -37,54 +37,61 @@ let pr = 1
 
 bp.run()
 
-function withBehavior(WrappedComponent, threads) {
+function withBehavior(threads) {
   // ...and returns another component...
-  return class extends React.Component {
+  return (WrappedComponent) => class extends WrappedComponent {
     state = {}
-    componentDidMount() {
+    constructor(props) {
+      super(props)
       threads.forEach(thread =>
-        bp.addBThread(``, pr++, thread)
+        bp.addBThread(``, pr++, thread.bind(this))
       )
-      var that = this
-      bp.addBThread('Log', pr++, function* () {
-        while (true) {
-          yield {
-            wait: [(event, payload) => {
-              console.log('event', event, payload)
-              if (event.startsWith('SET_STATE')) {
-                that.setState(payload)
-              }
-              return true
-            }]
-          }
-        }
-      })
-      bp.run()
+    }
+    componentDidMount() {
+      console.log('componentDidMount', WrappedComponent.name)
+
+      //var that = this
+      // bp.addBThread('Log', pr++, function* () {
+      //   while (true) {
+      //     yield {
+      //       wait: [(event, payload) => {
+      //         console.log('event', event, payload)
+      //         if (event.startsWith('SET_STATE')) {
+      //           console.log('fio', that == WrappedComponent)
+      //           that.setState(payload)
+      //         }
+      //         return true
+      //       }]
+      //     }
+      //   }
+      // })
+      bp.run() // Initiate super-step
     }
 
     render() {
       // ... and renders the wrapped component with the fresh data!
       // Notice that we pass through any additional props
-      return <WrappedComponent {...this.state} {...this.props} />;
+      // return <WrappedComponent {...this.state} {...this.props} />;
+      return super.render()
     }
   }
 }
 
 class Comments extends React.Component {
   render() {
-    if (!this.props.comments) {
+    if (!this.state.comments) {
       return null
     }
-    return this.props.comments.map(c =>
+    return this.state.comments.map(c =>
       <div key={c.id}>{c.comment}</div>
     )
   }
 }
 
-const BehavioralComments = withBehavior(Comments, [
+const BehavioralComments = withBehavior([
   function* () {
-    const comments = yield { wait: ['FETCH_COMMENTS_SUCCESS'] }
-    yield { request: ['SET_STATE_COMMENTS'], payload: comments }
+    const { comments } = yield { wait: ['FETCH_COMMENTS_SUCCESS'] }
+    this.setState({ comments })
   },
   function* () {
     yield { request: ['FETCH_COMMENTS']}
@@ -97,18 +104,23 @@ const BehavioralComments = withBehavior(Comments, [
     yield { wait: ['FETCH_ANOTHER_COMMENTS_COUNT'], block: ['FETCH_ANOTHER_COMMENTS_SUCCESS']}
 
   }
-])
+])(Comments)
 
-function CommentsCount(props) {
-  return <div>{props.commentsCount}</div>
+class CommentsCount extends React.Component {
+  render() {
+    return <div>{this.state.commentsCount}</div>
+  }
 }
-const BehavioralCommentsCount = withBehavior(CommentsCount, [
+const BehavioralCommentsCount = withBehavior([
   function* () {
     yield { request: ['FETCH_COMMENTS_COUNT']}
     const comments = yield fetchComments(2000)
     yield { request: ['FETCH_COMMENTS_COUNT_SUCCESS']}
-    yield { request: ['SET_STATE_COMMENTS_COUNT'], payload: { commentsCount: comments.length }}
+    this.setState({ commentsCount: comments.length })
   },
+])(CommentsCount)
+
+const BlockCommentsCount = withBehavior([
   //// STUFF AFTER THIS COULD BE ADDED BY OTHERS
   function* () {
     // block FETCH_COMMENTS_COUNT
@@ -117,9 +129,10 @@ const BehavioralCommentsCount = withBehavior(CommentsCount, [
   function* () {
     yield { request: ['FETCH_ANOTHER_COMMENTS_COUNT']}
     const { comments } = yield { wait: ['FETCH_ANOTHER_COMMENTS_SUCCESS']}
-    yield { request: ['SET_STATE_COMMENTS_COUNT'], payload: { commentsCount: comments.length }}
+    this.setState({ commentsCount: comments.length })
   }
-])
+])(BehavioralCommentsCount)
+
 
 class App extends Component {
   render() {
@@ -135,7 +148,7 @@ class App extends Component {
         <hr />
         <BehavioralComments />
         <Delay ms={4000}>
-          <BehavioralCommentsCount />
+          <BlockCommentsCount />
         </Delay>
       </div>
     );
