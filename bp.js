@@ -1,4 +1,6 @@
 /**
+ * License to: 
+ * Ashrov, A., Marron, A., Weiss, G., & Wiener, G. (2015). A use-case for behavioral programming: an architecture in JavaScript and Blockly for interactive applications with cross-cutting scenarios. Science of Computer Programming, 98, 268-292.
  * BP implementation for Javascript 1.7 (Mozilla)
  */
 
