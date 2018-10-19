@@ -22,7 +22,7 @@ test('Add hot water 3 times', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
       if (foundEvents.length === 3) {
         expect(foundEvents).toEqual([
           { type: 'HOT' },
@@ -70,7 +70,7 @@ test('Add hot/cold water 3 times', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
         expect(foundEvents).toEqual([
           { type: 'HOT' },
@@ -134,7 +134,7 @@ test('Interleave', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
         expect(foundEvents).toEqual([
           { type: 'HOT' },
@@ -198,7 +198,7 @@ test('Interleave without arrays', done => {
       yield {
         wait: () => true
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
         expect(foundEvents).toEqual([
           { type: 'HOT' },
@@ -262,7 +262,7 @@ test('Without objects but arrays', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
         expect(foundEvents).toEqual([
           { type: 'HOT' },
@@ -326,7 +326,7 @@ test('Without objects', done => {
       yield {
         wait: () => true
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
         expect(foundEvents).toEqual([
           { type: 'HOT' },
@@ -390,7 +390,7 @@ test('With functions', done => {
       yield {
         wait: () => true
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
         expect(foundEvents).toEqual([
           { type: 'HOT' },

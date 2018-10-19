@@ -24,7 +24,9 @@ function BProgram() {
 }
 
 BProgram.prototype.addBThread = function(name, prio, fun) {
-  var bound = fun.bind(this);
+  var bound = fun.bind({
+    lastEvent: () => this.lastEvent
+  });
   var bt = bound(); // Activate the generator
   var bid = {
     name: name,
@@ -42,7 +44,7 @@ BProgram.prototype.addAll = function(bthreads, priorities) {
   }
 };
 
-BProgram.prototype.event = function(e) {
+BProgram.prototype.request = function(e) {
   var name = 'request ' + e;
   var bt = function*() {
     yield {

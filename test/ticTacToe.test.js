@@ -155,11 +155,11 @@ const preventCompletionOfLineWithTwoXs = generateThreads(
       yield {
         wait: [eventFn]
       };
-      line = line.filter(n => n !== this.lastEvent.payload);
+      line = line.filter(n => n !== this.lastEvent().payload);
       yield {
         wait: [eventFn]
       };
-      line = line.filter(n => n !== this.lastEvent.payload);
+      line = line.filter(n => n !== this.lastEvent().payload);
 
       // Request an O
       yield {
@@ -184,16 +184,16 @@ test('DetectWins', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
     }
   });
 
   bp.run();
 
   // Play game
-  bp.event({ type: 'X', payload: 0 });
-  bp.event({ type: 'X', payload: 1 });
-  bp.event({ type: 'X', payload: 2 });
+  bp.request({ type: 'X', payload: 0 });
+  bp.request({ type: 'X', payload: 1 });
+  bp.request({ type: 'X', payload: 2 });
 
   expect(foundEvents).toEqual([
     { payload: 0, type: 'X' },
@@ -220,16 +220,16 @@ test('EnforcePlayerTurns with blocking', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
     }
   });
 
   bp.run();
 
   // Play game
-  bp.event({ type: 'X', payload: 0 });
-  bp.event({ type: 'X', payload: 1 });
-  bp.event({ type: 'X', payload: 2 });
+  bp.request({ type: 'X', payload: 0 });
+  bp.request({ type: 'X', payload: 1 });
+  bp.request({ type: 'X', payload: 2 });
   expect(foundEvents).toEqual([{ payload: 0, type: 'X' }]);
   done();
 });
@@ -250,18 +250,18 @@ test('EnforcePlayerTurns without blocking', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
     }
   });
 
   bp.run();
 
   // Play game
-  bp.event({ type: 'X', payload: 0 });
-  bp.event({ type: 'O', payload: 1 });
-  bp.event({ type: 'X', payload: 4 });
-  bp.event({ type: 'O', payload: 2 });
-  bp.event({ type: 'X', payload: 8 });
+  bp.request({ type: 'X', payload: 0 });
+  bp.request({ type: 'O', payload: 1 });
+  bp.request({ type: 'X', payload: 4 });
+  bp.request({ type: 'O', payload: 2 });
+  bp.request({ type: 'X', payload: 8 });
 
   expect(foundEvents).toEqual([
     { payload: 0, type: 'X' },
@@ -294,18 +294,18 @@ test('disallowSquareReuse', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
     }
   });
 
   bp.run();
 
   // Play game
-  bp.event({ type: 'X', payload: 0 });
-  bp.event({ type: 'O', payload: 0 }); // Square reuse
-  bp.event({ type: 'X', payload: 4 });
-  bp.event({ type: 'O', payload: 2 });
-  bp.event({ type: 'X', payload: 8 });
+  bp.request({ type: 'X', payload: 0 });
+  bp.request({ type: 'O', payload: 0 }); // Square reuse
+  bp.request({ type: 'X', payload: 4 });
+  bp.request({ type: 'O', payload: 2 });
+  bp.request({ type: 'X', payload: 8 });
 
   expect(foundEvents).toEqual([
     { payload: 0, type: 'X' },
@@ -336,19 +336,19 @@ test('Doesnt stopGameAfterWin', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
     }
   });
 
   bp.run();
 
   // Play game
-  bp.event({ type: 'X', payload: 0 });
-  bp.event({ type: 'O', payload: 1 });
-  bp.event({ type: 'X', payload: 4 });
-  bp.event({ type: 'O', payload: 2 });
-  bp.event({ type: 'X', payload: 8 });
-  bp.event({ type: 'O', payload: 7 });
+  bp.request({ type: 'X', payload: 0 });
+  bp.request({ type: 'O', payload: 1 });
+  bp.request({ type: 'X', payload: 4 });
+  bp.request({ type: 'O', payload: 2 });
+  bp.request({ type: 'X', payload: 8 });
+  bp.request({ type: 'O', payload: 7 });
 
   expect(foundEvents).toEqual([
     { payload: 0, type: 'X' },
@@ -383,19 +383,19 @@ test('stopGameAfterWin', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
     }
   });
 
   bp.run();
 
   // Play game
-  bp.event({ type: 'X', payload: 0 });
-  bp.event({ type: 'O', payload: 1 });
-  bp.event({ type: 'X', payload: 4 });
-  bp.event({ type: 'O', payload: 2 });
-  bp.event({ type: 'X', payload: 8 });
-  bp.event({ type: 'O', payload: 7 });
+  bp.request({ type: 'X', payload: 0 });
+  bp.request({ type: 'O', payload: 1 });
+  bp.request({ type: 'X', payload: 4 });
+  bp.request({ type: 'O', payload: 2 });
+  bp.request({ type: 'X', payload: 8 });
+  bp.request({ type: 'O', payload: 7 });
 
   expect(foundEvents).toEqual([
     { payload: 0, type: 'X' },
@@ -430,16 +430,16 @@ test('defaultMoves', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
     }
   });
 
   bp.run();
 
   // Play game
-  bp.event({ type: 'X', payload: 0 });
-  bp.event({ type: 'X', payload: 4 });
-  bp.event({ type: 'X', payload: 8 });
+  bp.request({ type: 'X', payload: 0 });
+  bp.request({ type: 'X', payload: 4 });
+  bp.request({ type: 'X', payload: 8 });
 
   expect(foundEvents).toEqual([
     { payload: 0, type: 'X' },
@@ -475,16 +475,16 @@ test('startAtCenter', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
     }
   });
 
   bp.run();
 
   // Play game
-  bp.event({ type: 'X', payload: 0 });
-  bp.event({ type: 'X', payload: 4 });
-  bp.event({ type: 'X', payload: 8 });
+  bp.request({ type: 'X', payload: 0 });
+  bp.request({ type: 'X', payload: 4 });
+  bp.request({ type: 'X', payload: 8 });
 
   expect(foundEvents).toEqual([
     { payload: 0, type: 'X' },
@@ -519,15 +519,15 @@ test('preventCompletionOfLineWithTwoXs', done => {
       yield {
         wait: [() => true]
       };
-      foundEvents.push(this.lastEvent);
+      foundEvents.push(this.lastEvent());
     }
   });
 
   bp.run();
 
   // Play game
-  bp.event({ type: 'X', payload: 0 });
-  bp.event({ type: 'X', payload: 3 });
+  bp.request({ type: 'X', payload: 0 });
+  bp.request({ type: 'X', payload: 3 });
 
   expect(foundEvents).toEqual([
     { payload: 0, type: 'X' },
