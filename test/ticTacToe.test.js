@@ -94,6 +94,80 @@ const enforcePlayerTurns = [
   }
 ];
 
+const disallowSquareReuse = [
+  ...generateThreads(
+    allCells,
+    cellNumber =>
+      function* disallowSquareReuse() {
+        const event = e =>
+          (e.type === 'X' || e.type === 'O') && e.payload === cellNumber;
+        yield {
+          wait: [event]
+        };
+        yield {
+          block: [event]
+        };
+      }
+  )
+];
+
+function* stopGameAfterWin() {
+  yield {
+    wait: ['XWins', 'OWins']
+  };
+  yield {
+    block: ['X', 'O']
+  };
+}
+
+function* defaultMoves() {
+  while (true) {
+    yield {
+      request: [
+        { type: 'O', payload: 0 },
+        { type: 'O', payload: 1 },
+        { type: 'O', payload: 2 },
+        { type: 'O', payload: 3 },
+        { type: 'O', payload: 4 },
+        { type: 'O', payload: 5 },
+        { type: 'O', payload: 6 },
+        { type: 'O', payload: 7 },
+        { type: 'O', payload: 8 }
+      ]
+    };
+  }
+}
+
+function* startAtCenter() {
+  yield {
+    request: [{ type: 'O', payload: 4 }]
+  };
+}
+
+const preventCompletionOfLineWithTwoXs = generateThreads(
+  allLines,
+  ([cell1, cell2, cell3]) =>
+    function*() {
+      const eventFn = matchAny('X', [cell1, cell2, cell3]);
+      let line = [cell1, cell2, cell3];
+
+      // Wait for two X's
+      yield {
+        wait: [eventFn]
+      };
+      line = line.filter(n => n !== this.lastEvent.payload);
+      yield {
+        wait: [eventFn]
+      };
+      line = line.filter(n => n !== this.lastEvent.payload);
+
+      // Request an O
+      yield {
+        request: [{ type: 'O', payload: line[0] }]
+      };
+    }
+);
+
 test('DetectWins', done => {
   const bp = new BProgram();
   let priority = 0;
@@ -101,25 +175,16 @@ test('DetectWins', done => {
   const threads = [...detectWins];
 
   threads.forEach(thread => {
-    bp.addBThread('DetectWins', ++priority, thread);
+    bp.addBThread('', ++priority, thread);
   });
 
+  let foundEvents = [];
   bp.addBThread('except', ++priority, function*() {
-    let foundEvents = [];
     while (true) {
       yield {
         wait: [() => true]
       };
       foundEvents.push(this.lastEvent);
-      if (foundEvents.length === 4) {
-        expect(foundEvents).toEqual([
-          { payload: 0, type: 'X' },
-          { payload: 1, type: 'X' },
-          { payload: 2, type: 'X' },
-          { type: 'XWins' }
-        ]);
-        done();
-      }
     }
   });
 
@@ -129,6 +194,14 @@ test('DetectWins', done => {
   bp.event({ type: 'X', payload: 0 });
   bp.event({ type: 'X', payload: 1 });
   bp.event({ type: 'X', payload: 2 });
+
+  expect(foundEvents).toEqual([
+    { payload: 0, type: 'X' },
+    { payload: 1, type: 'X' },
+    { payload: 2, type: 'X' },
+    { type: 'XWins' }
+  ]);
+  done();
 });
 
 test('EnforcePlayerTurns with blocking', done => {
@@ -138,20 +211,16 @@ test('EnforcePlayerTurns with blocking', done => {
   const threads = [...detectWins, ...enforcePlayerTurns];
 
   threads.forEach(thread => {
-    bp.addBThread('DetectWins', ++priority, thread);
+    bp.addBThread('', ++priority, thread);
   });
 
+  let foundEvents = [];
   bp.addBThread('except', ++priority, function*() {
-    let foundEvents = [];
     while (true) {
       yield {
         wait: [() => true]
       };
       foundEvents.push(this.lastEvent);
-      if (foundEvents.length === 1) {
-        expect(foundEvents).toEqual([{ payload: 0, type: 'X' }]);
-        done();
-      }
     }
   });
 
@@ -161,6 +230,8 @@ test('EnforcePlayerTurns with blocking', done => {
   bp.event({ type: 'X', payload: 0 });
   bp.event({ type: 'X', payload: 1 });
   bp.event({ type: 'X', payload: 2 });
+  expect(foundEvents).toEqual([{ payload: 0, type: 'X' }]);
+  done();
 });
 
 test('EnforcePlayerTurns without blocking', done => {
@@ -170,24 +241,16 @@ test('EnforcePlayerTurns without blocking', done => {
   const threads = [...detectWins, ...enforcePlayerTurns];
 
   threads.forEach(thread => {
-    bp.addBThread('DetectWins', ++priority, thread);
+    bp.addBThread('', ++priority, thread);
   });
 
+  let foundEvents = [];
   bp.addBThread('except', ++priority, function*() {
-    let foundEvents = [];
     while (true) {
       yield {
         wait: [() => true]
       };
       foundEvents.push(this.lastEvent);
-      if (foundEvents.length === 3) {
-        expect(foundEvents).toEqual([
-          { payload: 0, type: 'X' },
-          { payload: 1, type: 'O' },
-          { payload: 2, type: 'X' }
-        ]);
-        done();
-      }
     }
   });
 
@@ -196,5 +259,281 @@ test('EnforcePlayerTurns without blocking', done => {
   // Play game
   bp.event({ type: 'X', payload: 0 });
   bp.event({ type: 'O', payload: 1 });
-  bp.event({ type: 'X', payload: 2 });
+  bp.event({ type: 'X', payload: 4 });
+  bp.event({ type: 'O', payload: 2 });
+  bp.event({ type: 'X', payload: 8 });
+
+  expect(foundEvents).toEqual([
+    { payload: 0, type: 'X' },
+    { payload: 1, type: 'O' },
+    { payload: 4, type: 'X' },
+    { payload: 2, type: 'O' },
+    { payload: 8, type: 'X' },
+    { type: 'XWins' }
+  ]);
+  done();
+});
+
+test('disallowSquareReuse', done => {
+  const bp = new BProgram();
+  let priority = 0;
+
+  const threads = [
+    ...detectWins,
+    ...enforcePlayerTurns,
+    ...disallowSquareReuse
+  ];
+
+  threads.forEach(thread => {
+    bp.addBThread('', ++priority, thread);
+  });
+
+  let foundEvents = [];
+  bp.addBThread('except', ++priority, function*() {
+    while (true) {
+      yield {
+        wait: [() => true]
+      };
+      foundEvents.push(this.lastEvent);
+    }
+  });
+
+  bp.run();
+
+  // Play game
+  bp.event({ type: 'X', payload: 0 });
+  bp.event({ type: 'O', payload: 0 }); // Square reuse
+  bp.event({ type: 'X', payload: 4 });
+  bp.event({ type: 'O', payload: 2 });
+  bp.event({ type: 'X', payload: 8 });
+
+  expect(foundEvents).toEqual([
+    { payload: 0, type: 'X' },
+    { payload: 2, type: 'O' },
+    { payload: 8, type: 'X' }
+  ]);
+  done();
+});
+
+test('Doesnt stopGameAfterWin', done => {
+  const bp = new BProgram();
+  let priority = 0;
+
+  const threads = [
+    ...detectWins,
+    ...enforcePlayerTurns,
+    ...disallowSquareReuse
+    // stopGameAfterWin
+  ];
+
+  threads.forEach(thread => {
+    bp.addBThread('', ++priority, thread);
+  });
+
+  let foundEvents = [];
+  bp.addBThread('except', ++priority, function*() {
+    while (true) {
+      yield {
+        wait: [() => true]
+      };
+      foundEvents.push(this.lastEvent);
+    }
+  });
+
+  bp.run();
+
+  // Play game
+  bp.event({ type: 'X', payload: 0 });
+  bp.event({ type: 'O', payload: 1 });
+  bp.event({ type: 'X', payload: 4 });
+  bp.event({ type: 'O', payload: 2 });
+  bp.event({ type: 'X', payload: 8 });
+  bp.event({ type: 'O', payload: 7 });
+
+  expect(foundEvents).toEqual([
+    { payload: 0, type: 'X' },
+    { payload: 1, type: 'O' },
+    { payload: 4, type: 'X' },
+    { payload: 2, type: 'O' },
+    { payload: 8, type: 'X' },
+    { type: 'XWins' },
+    { payload: 7, type: 'O' }
+  ]);
+  done();
+});
+
+test('stopGameAfterWin', done => {
+  const bp = new BProgram();
+  let priority = 0;
+
+  const threads = [
+    ...detectWins,
+    ...enforcePlayerTurns,
+    ...disallowSquareReuse,
+    stopGameAfterWin
+  ];
+
+  threads.forEach(thread => {
+    bp.addBThread('', ++priority, thread);
+  });
+
+  let foundEvents = [];
+  bp.addBThread('except', ++priority, function*() {
+    while (true) {
+      yield {
+        wait: [() => true]
+      };
+      foundEvents.push(this.lastEvent);
+    }
+  });
+
+  bp.run();
+
+  // Play game
+  bp.event({ type: 'X', payload: 0 });
+  bp.event({ type: 'O', payload: 1 });
+  bp.event({ type: 'X', payload: 4 });
+  bp.event({ type: 'O', payload: 2 });
+  bp.event({ type: 'X', payload: 8 });
+  bp.event({ type: 'O', payload: 7 });
+
+  expect(foundEvents).toEqual([
+    { payload: 0, type: 'X' },
+    { payload: 1, type: 'O' },
+    { payload: 4, type: 'X' },
+    { payload: 2, type: 'O' },
+    { payload: 8, type: 'X' },
+    { type: 'XWins' }
+  ]);
+  done();
+});
+
+test('defaultMoves', done => {
+  const bp = new BProgram();
+  let priority = 0;
+
+  const threads = [
+    ...detectWins,
+    ...enforcePlayerTurns,
+    ...disallowSquareReuse,
+    stopGameAfterWin,
+    defaultMoves
+  ];
+
+  threads.forEach(thread => {
+    bp.addBThread('', ++priority, thread);
+  });
+
+  let foundEvents = [];
+  bp.addBThread('except', ++priority, function*() {
+    while (true) {
+      yield {
+        wait: [() => true]
+      };
+      foundEvents.push(this.lastEvent);
+    }
+  });
+
+  bp.run();
+
+  // Play game
+  bp.event({ type: 'X', payload: 0 });
+  bp.event({ type: 'X', payload: 4 });
+  bp.event({ type: 'X', payload: 8 });
+
+  expect(foundEvents).toEqual([
+    { payload: 0, type: 'X' },
+    { payload: 1, type: 'O' },
+    { payload: 4, type: 'X' },
+    { payload: 2, type: 'O' },
+    { payload: 8, type: 'X' },
+    { type: 'XWins' }
+  ]);
+  done();
+});
+
+test('startAtCenter', done => {
+  const bp = new BProgram();
+  let priority = 0;
+
+  const threads = [
+    ...detectWins,
+    ...enforcePlayerTurns,
+    ...disallowSquareReuse,
+    stopGameAfterWin,
+    startAtCenter,
+    defaultMoves
+  ];
+
+  threads.forEach(thread => {
+    bp.addBThread('', ++priority, thread);
+  });
+
+  let foundEvents = [];
+  bp.addBThread('except', ++priority, function*() {
+    while (true) {
+      yield {
+        wait: [() => true]
+      };
+      foundEvents.push(this.lastEvent);
+    }
+  });
+
+  bp.run();
+
+  // Play game
+  bp.event({ type: 'X', payload: 0 });
+  bp.event({ type: 'X', payload: 4 });
+  bp.event({ type: 'X', payload: 8 });
+
+  expect(foundEvents).toEqual([
+    { payload: 0, type: 'X' },
+    { payload: 4, type: 'O' },
+    { payload: 8, type: 'X' },
+    { payload: 1, type: 'O' }
+  ]);
+  done();
+});
+
+test('preventCompletionOfLineWithTwoXs', done => {
+  const bp = new BProgram();
+  let priority = 0;
+
+  const threads = [
+    ...detectWins,
+    ...enforcePlayerTurns,
+    ...disallowSquareReuse,
+    stopGameAfterWin,
+    ...preventCompletionOfLineWithTwoXs,
+    startAtCenter,
+    defaultMoves
+  ];
+
+  threads.forEach(thread => {
+    bp.addBThread('', ++priority, thread);
+  });
+
+  let foundEvents = [];
+  bp.addBThread('except', ++priority, function*() {
+    while (true) {
+      yield {
+        wait: [() => true]
+      };
+      foundEvents.push(this.lastEvent);
+    }
+  });
+
+  bp.run();
+
+  // Play game
+  bp.event({ type: 'X', payload: 0 });
+  bp.event({ type: 'X', payload: 3 });
+
+  expect(foundEvents).toEqual([
+    { payload: 0, type: 'X' },
+    { payload: 4, type: 'O' },
+    { payload: 3, type: 'X' },
+    { payload: 6, type: 'O' }
+  ]);
+  done();
 });
