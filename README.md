@@ -50,7 +50,7 @@ bp.addBThread('console.log', ++priority, function*() {
     yield {
       wait: () => true
     };
-    console.log(this.lastEvent);
+    console.log(this.lastEvent());
   }
 });
 
