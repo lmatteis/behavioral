@@ -1,13 +1,16 @@
 {
   "name": "b-thread",
   "version": "1.0.0",
-  "description": "",
+  "description": "Behavioral Programming for JavaScript",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Luca Matteis",
+  "license": "MIT",
   "devDependencies": {
+    "babel-jest": "^23.6.0",
+    "babel-preset-env": "^1.7.0",
+    "jest": "^23.6.0"
   }
 }
