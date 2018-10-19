@@ -54,6 +54,7 @@ BProgram.prototype.event = function(e) {
       ]
     };
   };
+  // XXX should be lowest priority (1 is highest)
   this.addBThread(name, 1, bt);
   this.run(); // Initiate super-step
 };

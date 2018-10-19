@@ -1,4 +1,4 @@
-import BProgram from './index';
+import BProgram from '../index';
 
 test('Add hot water 3 times', done => {
   const bp = new BProgram();
