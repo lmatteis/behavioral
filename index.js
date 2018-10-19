@@ -84,14 +84,25 @@ BProgram.prototype.run = function() {
     while (notEmpty(this.pending)) {
       bid = this.pending.shift();
       var r = bid.request ? bid.request : [];
+      // Always convert `request: 'FOO'` into `request: ['FOO']`
+      if (!Array.isArray(r)) {
+        r = [r];
+      }
       var w = bid.wait ? bid.wait : [];
+      if (!Array.isArray(w)) {
+        w = [w];
+      }
       var waitlist = r.concat(w);
       var cur = false;
       for (var i = 0; i < waitlist.length; i++) {
         var waiting = waitlist[i];
+        // Convert string `request|wait: 'FOO'` into `request|wait: { type: 'FOO'}`
+        if (typeof waiting === 'string') {
+          waiting = { type: waiting };
+        }
         if (
-          waiting == this.lastEvent ||
-          (typeof waiting == 'function' && waiting(this.lastEvent))
+          waiting.type === this.lastEvent.type ||
+          (typeof waiting === 'function' && waiting(this.lastEvent))
         ) {
           cur = true;
         }
@@ -117,8 +128,16 @@ BProgram.prototype.selectNextEvent = function() {
   for (i = 0; i < this.pending.length; i++) {
     var bid = this.pending[i];
     if (bid.request) {
+      // Always convert `request: 'FOO'` into `request: ['FOO']`
+      if (!Array.isArray(bid.request)) {
+        bid.request = [bid.request];
+      }
       for (j = 0; j < bid.request.length; j++) {
         var e = bid.request[j];
+        // Convert string `request: 'FOO'` into `request: { type: 'FOO'}`
+        if (typeof e === 'string') {
+          e = { type: e };
+        }
         var c = {
           priority: bid.priority,
           event: e
@@ -133,10 +152,23 @@ BProgram.prototype.selectNextEvent = function() {
     for (j = 0; j < this.pending.length; j++) {
       bid = this.pending[j];
       if (bid.block) {
+        // Always convert `block: 'FOO'` into `block: ['FOO']`
+        if (!Array.isArray(bid.block)) {
+          bid.block = [bid.block];
+        }
         for (k = 0; k < bid.block.length; k++) {
           var blocked = bid.block[k];
           e = candidate.event;
-          if (e == blocked || (typeof blocked == 'function' && blocked(e))) {
+
+          // Convert string `block: 'FOO'` into `block: { type: 'FOO'}`
+          if (typeof blocked === 'string') {
+            blocked = { type: blocked };
+          }
+
+          if (
+            e.type === blocked.type ||
+            (typeof blocked === 'function' && blocked(e))
+          ) {
             ok = false;
           }
         }
