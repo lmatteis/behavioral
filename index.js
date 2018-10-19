@@ -65,13 +65,14 @@ BProgram.prototype.run = function() {
   while (notEmpty(this.running)) {
     var bid = this.running.shift();
     var bt = bid.bthread;
-    try {
-      var newbid = bt.next(this.lastEvent).value; // Run an iteration of the generator
+    var next = bt.next(this.lastEvent);
+    if (!next.done) {
+      var newbid = next.value; // Run an iteration of the generator
       newbid.bthread = bt; // Bind the bthread to the bid for running later
       newbid.priority = bid.priority; // Keep copying the prio
       newbid.name = bid.name; // Keep copying the name
       this.pending.push(newbid);
-    } catch (e) {
+    } else {
       // This is normal - the bthread has finished.
     }
   }
