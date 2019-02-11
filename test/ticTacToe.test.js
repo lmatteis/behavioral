@@ -195,7 +195,7 @@ test('DetectWins', done => {
   bp.request({ type: 'X', payload: 1 });
   bp.request({ type: 'X', payload: 2 });
 
-  expect(foundEvents).toEqual([
+  expect(foundEvents).toMatchObject([
     { payload: 0, type: 'X' },
     { payload: 1, type: 'X' },
     { payload: 2, type: 'X' },
@@ -230,7 +230,7 @@ test('EnforcePlayerTurns with blocking', done => {
   bp.request({ type: 'X', payload: 0 });
   bp.request({ type: 'X', payload: 1 });
   bp.request({ type: 'X', payload: 2 });
-  expect(foundEvents).toEqual([{ payload: 0, type: 'X' }]);
+  expect(foundEvents).toMatchObject([{ payload: 0, type: 'X' }]);
   done();
 });
 
@@ -263,7 +263,7 @@ test('EnforcePlayerTurns without blocking', done => {
   bp.request({ type: 'O', payload: 2 });
   bp.request({ type: 'X', payload: 8 });
 
-  expect(foundEvents).toEqual([
+  expect(foundEvents).toMatchObject([
     { payload: 0, type: 'X' },
     { payload: 1, type: 'O' },
     { payload: 4, type: 'X' },
@@ -307,7 +307,7 @@ test('disallowSquareReuse', done => {
   bp.request({ type: 'O', payload: 2 });
   bp.request({ type: 'X', payload: 8 });
 
-  expect(foundEvents).toEqual([
+  expect(foundEvents).toMatchObject([
     { payload: 0, type: 'X' },
     { payload: 2, type: 'O' },
     { payload: 8, type: 'X' }
@@ -350,7 +350,7 @@ test('Doesnt stopGameAfterWin', done => {
   bp.request({ type: 'X', payload: 8 });
   bp.request({ type: 'O', payload: 7 });
 
-  expect(foundEvents).toEqual([
+  expect(foundEvents).toMatchObject([
     { payload: 0, type: 'X' },
     { payload: 1, type: 'O' },
     { payload: 4, type: 'X' },
@@ -397,7 +397,7 @@ test('stopGameAfterWin', done => {
   bp.request({ type: 'X', payload: 8 });
   bp.request({ type: 'O', payload: 7 });
 
-  expect(foundEvents).toEqual([
+  expect(foundEvents).toMatchObject([
     { payload: 0, type: 'X' },
     { payload: 1, type: 'O' },
     { payload: 4, type: 'X' },
@@ -441,7 +441,7 @@ test('defaultMoves', done => {
   bp.request({ type: 'X', payload: 4 });
   bp.request({ type: 'X', payload: 8 });
 
-  expect(foundEvents).toEqual([
+  expect(foundEvents).toMatchObject([
     { payload: 0, type: 'X' },
     { payload: 1, type: 'O' },
     { payload: 4, type: 'X' },
@@ -486,7 +486,7 @@ test('startAtCenter', done => {
   bp.request({ type: 'X', payload: 4 });
   bp.request({ type: 'X', payload: 8 });
 
-  expect(foundEvents).toEqual([
+  expect(foundEvents).toMatchObject([
     { payload: 0, type: 'X' },
     { payload: 4, type: 'O' },
     { payload: 8, type: 'X' },
@@ -529,7 +529,7 @@ test('preventCompletionOfLineWithTwoXs', done => {
   bp.request({ type: 'X', payload: 0 });
   bp.request({ type: 'X', payload: 3 });
 
-  expect(foundEvents).toEqual([
+  expect(foundEvents).toMatchObject([
     { payload: 0, type: 'X' },
     { payload: 4, type: 'O' },
     { payload: 3, type: 'X' },

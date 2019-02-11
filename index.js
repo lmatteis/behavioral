@@ -184,6 +184,7 @@ BProgram.prototype.selectNextEvent = function() {
   if (events.length > 0) {
     events.sort(compareBids);
     this.lastEvent = events[0].event;
+    this.lastEvent.priority = events[0].priority;
   } else {
     this.lastEvent = null;
   }

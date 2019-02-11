@@ -24,7 +24,7 @@ test('Add hot water 3 times', done => {
       };
       foundEvents.push(this.lastEvent());
       if (foundEvents.length === 3) {
-        expect(foundEvents).toEqual([
+        expect(foundEvents).toMatchObject([
           { type: 'HOT' },
           { type: 'HOT' },
           { type: 'HOT' }
@@ -72,7 +72,7 @@ test('Add hot/cold water 3 times', done => {
       };
       foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
-        expect(foundEvents).toEqual([
+        expect(foundEvents).toMatchObject([
           { type: 'HOT' },
           { type: 'HOT' },
           { type: 'HOT' },
@@ -136,7 +136,7 @@ test('Interleave', done => {
       };
       foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
-        expect(foundEvents).toEqual([
+        expect(foundEvents).toMatchObject([
           { type: 'HOT' },
           { type: 'COLD' },
           { type: 'HOT' },
@@ -200,7 +200,7 @@ test('Interleave without arrays', done => {
       };
       foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
-        expect(foundEvents).toEqual([
+        expect(foundEvents).toMatchObject([
           { type: 'HOT' },
           { type: 'COLD' },
           { type: 'HOT' },
@@ -264,7 +264,7 @@ test('Without objects but arrays', done => {
       };
       foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
-        expect(foundEvents).toEqual([
+        expect(foundEvents).toMatchObject([
           { type: 'HOT' },
           { type: 'COLD' },
           { type: 'HOT' },
@@ -328,7 +328,7 @@ test('Without objects', done => {
       };
       foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
-        expect(foundEvents).toEqual([
+        expect(foundEvents).toMatchObject([
           { type: 'HOT' },
           { type: 'COLD' },
           { type: 'HOT' },
@@ -392,7 +392,7 @@ test('With functions', done => {
       };
       foundEvents.push(this.lastEvent());
       if (foundEvents.length === 6) {
-        expect(foundEvents).toEqual([
+        expect(foundEvents).toMatchObject([
           { type: 'HOT' },
           { type: 'COLD' },
           { type: 'HOT' },

@@ -1,6 +1,6 @@
 {
   "name": "behavioral",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Behavioral Programming for JavaScript",
   "main": "lib",
   "files": [
